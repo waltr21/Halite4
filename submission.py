@@ -3,67 +3,32 @@ from kaggle_environments import evaluate, make
 from entities import Board, Ship, ShipYard, Space
 
 board = None
-numPlayers = 0
 
-def setPlayers(obs):
-    global numPlayers, board
-    numPlayers = len(obs['players'])
-    playerIndex = obs['player']
-    allPlayerIds = obs['players'][playerIndex][2].keys()
-    # Set friendly players on board.
-    for id in allPlayerIds:
-        player = obs['players'][playerIndex][2][id]
-        tempShip = Ship(id, player[0] % 15, player[0] // 15, True)
-        board.setShipSpace(tempShip)
+def updateBoard(obs):
+    global board
+    # First step involves creating all objects.
+    if (obs['step'] == 1):
+        board = Board(obs['halite'], len(obs['players']))
+        return
 
-    # Set all other players
-    for i in range(numPlayers):
-        # Make sure we are not looking at own players
-        if (i != playerIndex):
-            allPlayerIds = obs['players'][i][2].keys()
-            # Set friendly players on board.
-            for id in allPlayerIds:
-                player = obs['players'][i][2][id]
-                tempShip = Ship(id, player[0] % 15, player[0] // 15, False)
-                board.setShipSpace(tempShip)
-
-    board.show()
-
-def start(obs):
-    global board, numPlayers
-    board = Board(obs['halite'])
-    setPlayers(obs)
+    board.step = obs['step']
     board.updateHalite(obs['halite'])
+    board.updatePlayers(obs)
 
-
+    # board.show()
 
 def process(obs):
-    action = {}
-    ship_ids = list(obs.players[obs.player][2].keys())
-
-    for ship_id in ship_ids:
-        getAction(ship_id)
-        decision = convert()
-        ship_action = decision
-        if ship_action is not None:
-            action[ship_id] = decision
-
-    # if(len(ship_ids)  == 0):
-    #     action = spawn()
-
-
-    return action
+    updateBoard(obs)
+    return board.getAction()
 
 if __name__ == "__main__":
     env = make("halite", debug=True)
-    trainer = env.train([None, "submission"])
+    trainer = env.train([None, "submission", "submission", "submission"])
     observation = trainer.reset()
-    start(observation)
     env.render()
 
     while not env.done:
-        #my_action = process(observation)
-        my_action = {}
+        my_action = process(observation)
         # print("my action", my_action)
         observation, reward, done, info = trainer.step(my_action)
         # env.render(mode="ipython", width=100, height=90, header=False, controls=False)
