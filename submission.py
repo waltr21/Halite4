@@ -9,11 +9,12 @@ def updateBoard(obs):
     # First step involves creating all objects.
     if (obs['step'] == 1):
         board = Board(obs['halite'], len(obs['players']))
-        return
 
     board.step = obs['step']
+    board.myHalite = obs['players'][obs['player']][0]
     board.updateHalite(obs['halite'])
     board.updatePlayers(obs)
+    board.updateShipYards(obs)
 
     # board.show()
 
@@ -23,7 +24,7 @@ def process(obs):
 
 if __name__ == "__main__":
     env = make("halite", debug=True)
-    trainer = env.train([None, "submission", "submission", "submission"])
+    trainer = env.train([None, "submission"])
     observation = trainer.reset()
     env.render()
 
@@ -32,4 +33,7 @@ if __name__ == "__main__":
         # print("my action", my_action)
         observation, reward, done, info = trainer.step(my_action)
         # env.render(mode="ipython", width=100, height=90, header=False, controls=False)
-    # env.render()
+    #print(observation)
+    #board.show()
+    env.render()
+    board.showInfo()
